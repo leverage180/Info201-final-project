@@ -1,0 +1,14 @@
+body {
+  background: silver;
+}
+
+p {
+  color: black;
+  font-size: 12pt;
+  font-family: "Gill Sans", sans-serif;
+}
+
+h2 {
+  color: red;
+  font-family: "Gill Sans", sans-serif;
+}
