@@ -1,14 +1,26 @@
 body {
-  background: silver;
+  background: white;
 }
 
 p {
   color: black;
   font-size: 12pt;
-  font-family: "Gill Sans", sans-serif;
+  font-family:  Trebuchet MS, sans-serif;
 }
 
 h2 {
-  color: red;
-  font-family: "Gill Sans", sans-serif;
+  color: black;
+  font-family:  Trebuchet MS, sans-serif;
 }
+
+h1 {
+  color: red;
+  font-size: 50px;
+  font-family: Impact; 
+}
+
+a {
+  color: black;
+  font-family: Trebuchet MS, sans-serif;
+}
+

@@ -35,38 +35,62 @@ youtube_data <- youtube_data %>%
 shinyUI(fluidPage(
   theme = "style.css",
   
-  titlePanel("YouTube TRENDING"),
+  h1("YouTube TRENDING"),
   
   tabsetPanel(type = "tabs",
               tabPanel("Welcome",
-                p("On this site, users will see breakdown of videos from YouTube's Trending Page. We wish to explore whether a pattern exists amongst the videos
-                  that climb their way onto one of YouTube's most promiment tabs, if not the most promiment. We pulled the data from Kaggle. The dataset was produced
-                  and updated by a user named 'Mitchell J'. The dataset is called 'Trending YouTube Video Statistics. We are using version 83 of the USVideos.")          
+                tabsetPanel(
+                  tabPanel("Credit",
+                    p("On this site, users will see breakdown of videos from YouTube's Trending Page. We wish to explore whether a pattern exists amongst the videos
+                      that climb their way onto one of YouTube's most promiment tabs, if not the most promiment. We pulled the data from Kaggle. The dataset was produced
+                      and updated by a user named 'Mitchell J'. The dataset is called 'Trending YouTube Video Statistics. We are using version 83 of the USVideos and other
+                      countries.") 
+                  ),
+                  tabPanel("Thesis",
+                    p("For this project, we will present visualizations and explanation that seek to answer the question if there are certain common attributes amongst videos
+                      which appear on Trending. If there is no common or all the traits are proportional in appearance, such as every word has a similar chance of appearing, then
+                      we would lean towards rejecting the notion that only certain types of videos appear regularly on the YouTube Trending. As users will see, there does appear to be 
+                      some behaviors that indicate that there are patterns available for creators to use to appear on YouTube's Trending page. Thus, for this project, we want to find
+                      evidence that supports the idea that there are certain types of videos that appear on the Trending Page, signaling that they hold advantages over other videos on
+                      YouTube."),
+                    p(htmlOutput("trend_link"))
+                  ),
+                  tabPanel("Group Information",
+                    h3("/0 [Divide By Zero]"),
+                    h4("Anh-Minh Nguyen"),
+                    h4("Connor Carlson"),
+                    h4("Thomas Harding"),
+                    h4("Alec Bergen"),
+                    h5("Date Produced: 5/30/2018")
+                  )
+                )
               ),
               tabPanel("Time",
-                       sidebarLayout(
-                         sidebarPanel(
+                sidebarLayout(
+                  sidebarPanel(
                            
-                           selectInput("days",
-                                       "Day of the Week",
-                                       choices = c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"))
+                    selectInput("days",
+                                "Day of the Week",
+                                choices = c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"))
                          ),
                          
                          mainPanel(
-                           h2("Time v Trending"),
+                           h2("Time vs Trending"),
                            plotlyOutput("time_plot"),
-                           plotlyOutput("to_trending")
+                           plotlyOutput("to_trending"),
+                           htmlOutput("time_desc")
                          )
               )  
         ),
         tabPanel("Titles",
           sidebarLayout(
             sidebarPanel(
-              selectInput("choice",  label = strong("Word Searches"), 
+              radioButtons("choice",  label = strong("Word Searches"), 
                           choices = list("Default" = "default",
                                          "Positive" = "positive",
                                          "Negative" = "negative",
-                                         "All" = "all"))
+                                         "All" = "all")),
+              htmlOutput('choice_def')
             ),
             mainPanel(
               tabsetPanel(type = "tabs",
@@ -88,6 +112,20 @@ shinyUI(fluidPage(
                                    )
                           )
           )  
+        ),
+        tabPanel("Categories",
+                 sidebarLayout(
+                   sidebarPanel(
+                     selectInput("region",  label = strong("Region"), 
+                                 choices = list(America = "US", Canada = "CA", Germany = "DE", France = "FR",
+                                                England = "GB"))
+                   ),
+                   mainPanel(
+                     plotOutput("category_plot", click = "my_plot_click")
+                   )
+                 )  
         )
+      )
+    )
   )
-))
+

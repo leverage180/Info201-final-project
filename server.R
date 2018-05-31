@@ -6,133 +6,117 @@
 # 
 #    http://shiny.rstudio.com/
 #
-# 
-# unwanted_array = list(    'Å '='S', 'Å¡'='s', 'Å½'='Z', 'Å¾'='z', 'Ã'='A', 'Ã'='A', 'Ã'='A', 'Ã'='A', 'Ã'='A', 'Ã'='A', 'Ã'='A', 'Ã'='C', 'Ã'='E', 'Ã'='E',
-#                            'Ã'='E', 'Ã'='E', 'Ã'='I', 'Ã'='I', 'Ã'='I', 'Ã'='I', 'Ã'='N', 'Ã'='O', 'Ã'='O', 'Ã'='O', 'Ã'='O', 'Ã'='O', 'Ã'='O', 'Ã'='U',
-#                            'Ã'='U', 'Ã'='U', 'Ã'='U', 'Ã'='Y', 'Ã'='B', 'Ã'='Ss', 'Ã '='a', 'Ã¡'='a', 'Ã¢'='a', 'Ã£'='a', 'Ã¤'='a', 'Ã¥'='a', 'Ã¦'='a', 'Ã§'='c',
-#                            'Ã¨'='e', 'Ã©'='e', 'Ãª'='e', 'Ã«'='e', 'Ã¬'='i', 'Ã?'='i', 'Ã®'='i', 'Ã¯'='i', 'Ã°'='o', 'Ã±'='n', 'Ã²'='o', 'Ã³'='o', 'Ã´'='o', 'Ãµ'='o',
-#                            'Ã¶'='o', 'Ã¸'='o', 'Ã¹'='u', 'Ãº'='u', 'Ã»'='u', 'Ã½'='y', 'Ã½'='y', 'Ã¾'='b', 'Ã¿'='y' )
-# 
-#  youtube <- read.csv("USVideos.csv", stringsAsFactors = F)
-# 
-#  possessive <- function(x) {
-#    phrase <- x
-#    if (str_detect(phrase, "\\$")) {
-#      phrase <- "$"
-#    }
-#    str_replace_all(phrase, "\\'s", "") %>%
-#      str_replace_all("\\'S", "")
-# }
-# 
-#  bland <- function(x) {
-#    if (str_detect(x, "Ã°")) {
-#      title_clean <- iconv(x, "UTF-8", "ASCII", sub = "")
-#    } else {
-#      title <-  iconv(x, "UTF-8", "UTF-8", sub = "")
-#      title_clean <- chartr(paste(names(unwanted_array), collapse=''), paste(unwanted_array, collapse=''), title) %>%
-#        iconv("UTF-8", "ASCII", sub = "")
-#    }
-#    list <- unlist(str_split(title_clean, " "))
-#    paste(lapply(list, possessive), collapse = " ") %>%
-#      str_replace_all("[\\'.]", "") %>%
-#      str_replace_all("[^[A-Za-z0-9;_-]\\$]", " ") %>%
-#      toupper()
-#  }
-# 
-#  list_title <- unlist(lapply(youtube$title, bland))
-# 
-#  title_df <- data.frame(list_title)
-# 
-#  write.csv(title_df, "TitleList.csv", row.names = F)
-# 
-# list_all <- str_split(list_title, " ") %>%
-#   unlist()
-# 
-# list_unique <- unique(list_all)
-# 
-# df_u <- data.frame(list_unique, stringsAsFactors = F)
-# 
-# colnames(df_u)[1] <- "word"
-# 
-# count_strings <- function(x) {
-#   sum(list_all == x)
-# }
-# 
-# df_u <- mutate(df_u, number = lapply(word, count_strings))
-# 
-# df_u <- filter(df_u, word != "")
-# 
-# x <- vapply(df_u$number, length, 1L)
-# df_u <- df_u[rep(rownames(df_u), x), ]
-# df_u$number <- unlist(df_u$number, use.names = FALSE)
-# 
-# write.csv(df_u, file = "WordListFromTitles.csv", row.names = F)
+
 
 source("ui.R")
 
 library(shiny)
 library(plotly)
+############################################################################
+################### Anh-Minh ###############################################
+############################################################################
+
+# Visit https://github.com/anhm1n/supahprojects to find more code
+# Did not include for aesthetics purpose
+
+# Create data frames from the cleaning we did above
+# Write and read to save time
+df_u <- read.csv("WordListFromTitles.csv", stringsAsFactors = F, header = T)
+df_t <- read.csv("TitleList.csv", stringsAsFactors = F)
+
+# Create a vector of clean titles to use to find sample
+list_title <- as.vector(df_t$list_title)
+
+list_title_word <- str_split(list_title, " ")
+
+title_sampler <- function(x) {
+  index_match <- rep(NA, length(list_title_word))
+  for(i in 1:length(list_title_word)) {
+    index_match[i] <- sum(list_title_word[[i]] == x) >= 1
+  }
+  index_match
+} 
+
+# Make a bing dictionary to join and find negative or postive words
+bing_sentiments <- get_sentiments("bing")
+bing_sentiments$word <- toupper(bing_sentiments$word) 
+
+df_bing <- inner_join(bing_sentiments, df_u, by = "word")
+
+plain_words <- c("THE", "THEIR", "THEY", "THEYRE", "YOUR", "YOU" , "A", "AN", "IS", "ISNT", "WILL",
+                 "WONT", "DID", "DIDNT", "HAVE", "HAD", "WHEN", "WHERE", "HOW", "WHAT", "wHY", 
+                 "HAVENT", "NOT", "SHOULD", "WOULD", "COULD", "BE", "BEING", "GET", "HADNT", "WE",
+                 "THIS", "THERE", "IN", "MY", "TO", "AS", "I", "-", "ING", "IN", "FROM", "AT", "HE", "SHE",
+                 "AND", "ON", "IT", "FOR", "OF", "WITH")
+
+# Removes all plain words
+df_c <- df_u[!(df_u$word %in% plain_words),]
+
+#############################################################################################################
 
 shinyServer(function(input, output) {
+
+  ############################################################################
+  ###################### CONNOR's WORK #######################################
+  ############################################################################
   
+  # Calculates a datafram of the average days until video reaches trending by hour and by day chosen
+  ave_day_trend <- reactive({
+    average_days_to_trending <- youtube_data %>% 
+      filter(day_of_week == input$days) %>% 
+      select(hour_publish, days_to_trending) %>% 
+      group_by(hour_publish) %>% 
+      summarise("average_day" = mean(days_to_trending))
+    average_days_to_trending
+  })
+  
+  # filters the youtube data by day chosen
   time_data <- reactive({
     youtube_data <- youtube_data %>% 
       filter(day_of_week == input$days)
     
   })
   
-   
+  # creates a plot based on the day chosen, with time of day on the x axis and the amount of videos in trending in the y axis
   output$time_plot <- renderPlotly({
     p <- ggplot(data = time_data()) +
       geom_bar(aes(x = hour_publish), fill = "red") +
-      scale_y_continuous(limits = c(0, 750))
-    
+      scale_y_continuous(limits = c(0, 750)) +
+      labs(
+        title = "Amount of Videos V. Time Published",
+        x = "Hour Published",
+        y = "Amount of Videos in Trending"
+      )
     p <- ggplotly(p)
     p
     
   })
   
+  # creates a plot based on the day chosen, with the time published on the x axis and the average amount of days it took to reach trending on the y axis 
   output$to_trending <- renderPlotly({
-    p <- ggplot(data = time_data()) + 
-      
-      geom_smooth(aes(x = hour_publish, y = days_to_trending), color = "red", se = FALSE, method = "loess") +
-      labs(
-        x = "Hour Published",
-        y = "Days Until Video Reached Trending"
+    p <- plot_ly(data = ave_day_trend(), x = ~hour_publish, y = ~average_day, type = 'scatter', mode = 'lines', color = "Red") %>% 
+      layout(
+        xaxis = list(title = "Hour Published"),
+        yaxis = list(title = "Average Days Until Trending")
       )
-    
-    p <- ggplotly(p, tooltip = "y")
     p
   })
   
-  df_u <- read.csv("WordListFromTitles.csv", stringsAsFactors = F, header = T)
-  df_t <- read.csv("TitleList.csv", stringsAsFactors = F)
+  # creates a description about the above plots
+  output$time_desc <- renderUI({
+    
+    HTML(paste0("These graphs show the effect on the time of day published and the day of the week published of a video on trending. As we found out from the 
+                graphs the time published that has the most videos on trending is <strong>Tuesday at hour 9</strong>. Statstically this would be the best time to post a video.
+                We also compared this to the amount of days it took for the video to reach trending. We found an inverse relationship between the amount of videos
+                in trending and the amount of days it took for the video to get there. Therefore there someone is more likely to get into trending if it takes them
+                less time to get there."))
+  })
+
+ ################################################################ 
+######################### ANH-MINH'S WORK #######################
+  ###############################################################
   
-  list_title <- as.vector(df_t$list_title)
-  
-  list_title_word <- str_split(list_title, " ")
-  
-  title_sampler <- function(x) {
-    index_match <- rep(NA, length(list_title_word))
-    for(i in 1:length(list_title_word)) {
-      index_match[i] <- sum(list_title_word[[i]] == x) >= 1
-    }
-    index_match
-  } 
-  
-  bing_sentiments <- get_sentiments("bing")
-  bing_sentiments$word <- toupper(bing_sentiments$word) 
-  
-  df_bing <- inner_join(bing_sentiments, df_u, by = "word")
-  
-  plain_words <- c("THE", "THEIR", "THEY", "THEYRE", "YOUR", "YOU" , "A", "AN", "IS", "ISNT", "WILL",
-                   "WONT", "DID", "DIDNT", "HAVE", "HAD", "WHEN", "WHERE", "HOW", "WHAT", "wHY", 
-                   "HAVENT", "NOT", "SHOULD", "WOULD", "COULD", "BE", "BEING", "GET", "HADNT", "WE",
-                   "THIS", "THERE", "IN", "MY", "TO", "AS", "I", "-", "ING", "IN", "FROM", "AT", "HE", "SHE",
-                   "AND", "ON", "IT", "FOR", "OF", "WITH")
-  
-  df_c <- df_u[!(df_u$word %in% plain_words),]
-  
+# Determines which data frame to use  
   decipher <- reactive({
     if(input$choice == "positive" | input$choice == "negative") {
       df_main <- df_bing %>% 
@@ -145,14 +129,15 @@ shinyServer(function(input, output) {
     df_main <- top_n(df_main, n = 16, wt = number)
     df_main
   })
-  
+ 
+# Factorizes word to have interactivity available   
   factorize <- reactive({
     df_main <- decipher()
     df_main$word <- factor(decipher()$word)
     df_main
   })
   
-  
+# Create plot of word count  
   output$wordBar <- renderPlot({
     ggplot(data = decipher()) +
       geom_bar(aes(x = word, y = number), stat = "identity", fill = "red") +
@@ -160,7 +145,8 @@ shinyServer(function(input, output) {
       coord_flip() +
       labs(title = paste("TOP", toupper(input$choice)), x = "Word", y = "Number")
   })
-  
+
+  # Creates a random sample of 3 titles for user to click on  
   output$wordText <- renderPrint({
     if (is.null(input$my_click$y)) {
       return("")
@@ -179,6 +165,7 @@ shinyServer(function(input, output) {
     }
   })
   
+  # Text description of data
   output$description <- renderPrint({
     if(input$choice == "default") {
       HTML(paste0("As we observe the most common default words in YouTube's trending page, we notice
@@ -211,5 +198,44 @@ shinyServer(function(input, output) {
       HTML(paste0("This chart just shows the top words in general. As we can note, many of them are used for grammatical purposes,
                   and we assume not to be important enought to consider."))
     }
+  })
+  
+  # Links to YouTube's Trending page
+  output$trend_link <- renderPrint({
+    HTML(paste0("<a href = https://www.youtube.com/feed/trending> Here </a>is a link to YouTube's Trending page."))
+  })
+  
+  # Prints definition of title selection
+  output$choice_def <- renderPrint({
+    if (input$choice == "default") {
+      HTML(paste0("<b>Default</b><br> This selection omits any of the transition words like 'with' or 'the'. "))
+    } else if (input$choice == "positive") {
+      HTML(paste0("<b>Positive</b><br> This selection uses any word determined by the Bing dictionary to have a positive
+                  sentiment."))
+    } else if (input$choice == "negative") {
+      HTML(paste0("<b>Negative</b><br> This selection uses any word determined by the Bing dictionary to have a negative sentiment."))
+    } else {
+      HTML(paste0("<b>All</b><br> All the words in titles found from YouTube's Trending page are considered."))
+    }
+  })
+  ############################################################################
+  ################################# THOMAS' WORK #############################
+  ############################################################################
+  
+  category_data <- reactive({
+    read.csv(paste0("data/", input$region, "videos.csv"))
+  })
+  
+  sum <- reactive({
+    category_data() %>% group_by(category_id) %>% summarise(n = n()) %>%
+      mutate(freq = round((n / sum(n)) * 100, digits = 2))
+  })
+  
+  output$category_plot <- renderPlot({
+    ggplot(data = sum()) +
+      geom_point(mapping = aes(x = category_id, y = freq), na.rm = T) +
+      labs(title = paste(input$region, "data"),
+           x = "Category",
+           y = "Percentage")
   })
 })
