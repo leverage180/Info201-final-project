@@ -11,6 +11,7 @@ library(shiny)
 library(dplyr)
 library(ggplot2)
 library(stringr)
+library(plotly)
 youtube_data <- read.csv("data/USvideos.csv", stringsAsFactors = FALSE)
 
 youtube_data <- youtube_data %>% 
@@ -32,18 +33,24 @@ shinyUI(fluidPage(
   
   titlePanel("Time v Trending"),
   
-  sidebarLayout(
-    sidebarPanel(
-      
-      selectInput("days",
-                  "Day of the Week",
-                  choices = c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"))
-
-    ),
-    
-    mainPanel(
-       plotlyOutput("time_plot"),
-       plotlyOutput("to_trending")
-    )
+  tabsetPanel(type = "tabs",
+              tabPanel("Time",
+                       sidebarLayout(
+                         sidebarPanel(
+                           
+                           selectInput("days",
+                                       "Day of the Week",
+                                       choices = c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"))
+                         ),
+                         
+                         mainPanel(
+                           plotlyOutput("time_plot"),
+                           plotlyOutput("to_trending")
+                         )
+              )  
+        )
+        
+  
+  
   )
 ))

@@ -7,8 +7,9 @@
 #    http://shiny.rstudio.com/
 #
 
-library(shiny)
 source("ui.R")
+
+library(shiny)
 library(plotly)
 
 shinyServer(function(input, output) {
@@ -34,8 +35,6 @@ shinyServer(function(input, output) {
     p <- ggplot(data = time_data()) + 
       
       geom_smooth(aes(x = hour_publish, y = days_to_trending), color = "red", se = FALSE, method = "loess") +
-      scale_y_continuous(limit=c(0,80),oob = "squish") +
-    
       labs(
         x = "Hour Published",
         y = "Days Until Video Reached Trending"
