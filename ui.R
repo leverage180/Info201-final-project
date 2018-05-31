@@ -88,6 +88,20 @@ shinyUI(fluidPage(
                                    )
                           )
           )  
+        ),
+        tabPanel("Categories",
+                 sidebarLayout(
+                   sidebarPanel(
+                     selectInput("region",  label = strong("Region"), 
+                                 choices = list(America = "US", Canada = "CA", Germany = "DE", France = "FR",
+                                                England = "GB"))
+                   ),
+                   mainPanel(
+                     plotOutput("category_plot", click = "my_plot_click")
+                   )
+                 )  
         )
+        
+)
   )
-))
+)

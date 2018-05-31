@@ -7,11 +7,11 @@
 #    http://shiny.rstudio.com/
 #
 
-# unwanted_array = list(    'Š'='S', 'š'='s', 'Ž'='Z', 'ž'='z', 'À'='A', 'Á'='A', 'Â'='A', 'Ã'='A', 'Ä'='A', 'Å'='A', 'Æ'='A', 'Ç'='C', 'È'='E', 'É'='E',
-#                            'Ê'='E', 'Ë'='E', 'Ì'='I', 'Í'='I', 'Î'='I', 'Ï'='I', 'Ñ'='N', 'Ò'='O', 'Ó'='O', 'Ô'='O', 'Õ'='O', 'Ö'='O', 'Ø'='O', 'Ù'='U',
-#                            'Ú'='U', 'Û'='U', 'Ü'='U', 'Ý'='Y', 'Þ'='B', 'ß'='Ss', 'à'='a', 'á'='a', 'â'='a', 'ã'='a', 'ä'='a', 'å'='a', 'æ'='a', 'ç'='c',
-#                            'è'='e', 'é'='e', 'ê'='e', 'ë'='e', 'ì'='i', '�?'='i', 'î'='i', 'ï'='i', 'ð'='o', 'ñ'='n', 'ò'='o', 'ó'='o', 'ô'='o', 'õ'='o',
-#                            'ö'='o', 'ø'='o', 'ù'='u', 'ú'='u', 'û'='u', 'ý'='y', 'ý'='y', 'þ'='b', 'ÿ'='y' )
+# unwanted_array = list(    'Å '='S', 'Å¡'='s', 'Å½'='Z', 'Å¾'='z', 'Ã'='A', 'Ã'='A', 'Ã'='A', 'Ã'='A', 'Ã'='A', 'Ã'='A', 'Ã'='A', 'Ã'='C', 'Ã'='E', 'Ã'='E',
+#                            'Ã'='E', 'Ã'='E', 'Ã'='I', 'Ã'='I', 'Ã'='I', 'Ã'='I', 'Ã'='N', 'Ã'='O', 'Ã'='O', 'Ã'='O', 'Ã'='O', 'Ã'='O', 'Ã'='O', 'Ã'='U',
+#                            'Ã'='U', 'Ã'='U', 'Ã'='U', 'Ã'='Y', 'Ã'='B', 'Ã'='Ss', 'Ã '='a', 'Ã¡'='a', 'Ã¢'='a', 'Ã£'='a', 'Ã¤'='a', 'Ã¥'='a', 'Ã¦'='a', 'Ã§'='c',
+#                            'Ã¨'='e', 'Ã©'='e', 'Ãª'='e', 'Ã«'='e', 'Ã¬'='i', 'Ã?'='i', 'Ã®'='i', 'Ã¯'='i', 'Ã°'='o', 'Ã±'='n', 'Ã²'='o', 'Ã³'='o', 'Ã´'='o', 'Ãµ'='o',
+#                            'Ã¶'='o', 'Ã¸'='o', 'Ã¹'='u', 'Ãº'='u', 'Ã»'='u', 'Ã½'='y', 'Ã½'='y', 'Ã¾'='b', 'Ã¿'='y' )
 # 
 #  youtube <- read.csv("USVideos.csv", stringsAsFactors = F)
 # 
@@ -25,7 +25,7 @@
 # }
 # 
 #  bland <- function(x) {
-#    if (str_detect(x, "ð")) {
+#    if (str_detect(x, "Ã°")) {
 #      title_clean <- iconv(x, "UTF-8", "ASCII", sub = "")
 #    } else {
 #      title <-  iconv(x, "UTF-8", "UTF-8", sub = "")
@@ -87,12 +87,20 @@ shinyServer(function(input, output) {
     
   })
   
-   
+  category_data <- reactive({
+    read.csv(paste0("data/", input$region, "videos.csv"))
+  })
+  
+  sum <- reactive({
+    category_data() %>% group_by(category_id) %>% summarise(n = n()) %>%
+      mutate(freq = round((n / sum(n)) * 100, digits = 2))
+  })
+  
+  
   output$time_plot <- renderPlotly({
     p <- ggplot(data = time_data()) +
       geom_bar(aes(x = hour_publish), fill = "red") +
       scale_y_continuous(limits = c(0, 750))
-    
     p <- ggplotly(p)
     p
     
@@ -217,5 +225,12 @@ shinyServer(function(input, output) {
       HTML(paste0("This chart just shows the top words in general. As we can note, many of them are used for grammatical purposes,
                   and we assume not to be important enought to consider."))
     }
+  })
+  output$category_plot <- renderPlot({
+    ggplot(data = sum()) +
+      geom_point(mapping = aes(x = category_id, y = freq), na.rm = T) +
+      labs(title = paste(input$region, "data"),
+           x = "Category",
+           y = "Percentage")
   })
 })
