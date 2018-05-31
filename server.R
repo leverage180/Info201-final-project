@@ -83,7 +83,7 @@ shinyServer(function(input, output) {
   ave_day_trend <- reactive({
     average_days_to_trending <- youtube_data %>% 
       filter(day_of_week == input$days) %>% 
-      select(hour_publish, days_to_trending) %>% 
+      dplyr::select(hour_publish, days_to_trending) %>% 
       group_by(hour_publish) %>% 
       summarise("average_day" = mean(days_to_trending))
     average_days_to_trending
@@ -239,9 +239,11 @@ shinyServer(function(input, output) {
   ################################# ALECS' WORK #############################
   ############################################################################
 
+  
+  
+  
   # Main Graph
   output$graph <- renderPlotly({
-    
     for_fun <- joined_data  %>% mutate(count = 1) %>% filter(trending_date == substr(swap_date(as.character(input$date)), 3, 10))%>%
       group_by(category_name) %>% summarize(total = sum(count))
     
@@ -264,7 +266,7 @@ shinyServer(function(input, output) {
     scaled_data <- left_join(q_data, n_occurance)
     # Arranges data by likes and constructs datafrane of rankings by likes
     arranged_data <- scaled_data %>% arrange(-likes) %>% mutate(ranking = rownames(scaled_data)) %>%
-      select(category_name, ranking)
+      dplyr::select(category_name, ranking)
     # Joins data sets
     scaled_data <- left_join(scaled_data, arranged_data)
     # Creates ratio
@@ -300,12 +302,12 @@ shinyServer(function(input, output) {
       group_by(category_name) %>%  mutate(count = 1) %>%  summarize(total = sum(count))
     
     arranged_data <- joined_data %>% arrange(-likes) %>% mutate(ranking = rownames(joined_data)) %>%
-      select(category_name, ranking)
+      dplyr::select(category_name, ranking)
     
     scaled_data <- left_join(q_data, n_occurance)
     
     arranged_data <- scaled_data %>% arrange(-likes) %>% mutate(ranking = rownames(scaled_data)) %>%
-      select(category_name, ranking)
+      dplyr::select(category_name, ranking)
     
     scaled_data <- left_join(scaled_data, arranged_data)
     scaled_data
