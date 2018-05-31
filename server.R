@@ -78,9 +78,47 @@ source("ui.R")
 
 library(shiny)
 library(plotly)
+############################################################################
+################### Anh-Minh ###############################################
+############################################################################
+
+# Create data frames from the cleaning we did above
+# Write and read to save time
+df_u <- read.csv("WordListFromTitles.csv", stringsAsFactors = F, header = T)
+df_t <- read.csv("TitleList.csv", stringsAsFactors = F)
+
+list_title <- as.vector(df_t$list_title)
+
+list_title_word <- str_split(list_title, " ")
+
+title_sampler <- function(x) {
+  index_match <- rep(NA, length(list_title_word))
+  for(i in 1:length(list_title_word)) {
+    index_match[i] <- sum(list_title_word[[i]] == x) >= 1
+  }
+  index_match
+} 
+
+bing_sentiments <- get_sentiments("bing")
+bing_sentiments$word <- toupper(bing_sentiments$word) 
+
+df_bing <- inner_join(bing_sentiments, df_u, by = "word")
+
+plain_words <- c("THE", "THEIR", "THEY", "THEYRE", "YOUR", "YOU" , "A", "AN", "IS", "ISNT", "WILL",
+                 "WONT", "DID", "DIDNT", "HAVE", "HAD", "WHEN", "WHERE", "HOW", "WHAT", "wHY", 
+                 "HAVENT", "NOT", "SHOULD", "WOULD", "COULD", "BE", "BEING", "GET", "HADNT", "WE",
+                 "THIS", "THERE", "IN", "MY", "TO", "AS", "I", "-", "ING", "IN", "FROM", "AT", "HE", "SHE",
+                 "AND", "ON", "IT", "FOR", "OF", "WITH")
+
+df_c <- df_u[!(df_u$word %in% plain_words),]
+
+#############################################################################################################
 
 shinyServer(function(input, output) {
-  
+
+  ############################################################################
+  ###################### CONNOR's WORK #######################################
+  ############################################################################
   time_data <- reactive({
     youtube_data <- youtube_data %>% 
       filter(day_of_week == input$days)
@@ -118,35 +156,10 @@ shinyServer(function(input, output) {
     p <- ggplotly(p, tooltip = "y")
     p
   })
-  
-  df_u <- read.csv("WordListFromTitles.csv", stringsAsFactors = F, header = T)
-  df_t <- read.csv("TitleList.csv", stringsAsFactors = F)
-  
-  list_title <- as.vector(df_t$list_title)
-  
-  list_title_word <- str_split(list_title, " ")
-  
-  title_sampler <- function(x) {
-    index_match <- rep(NA, length(list_title_word))
-    for(i in 1:length(list_title_word)) {
-      index_match[i] <- sum(list_title_word[[i]] == x) >= 1
-    }
-    index_match
-  } 
-  
-  bing_sentiments <- get_sentiments("bing")
-  bing_sentiments$word <- toupper(bing_sentiments$word) 
-  
-  df_bing <- inner_join(bing_sentiments, df_u, by = "word")
-  
-  plain_words <- c("THE", "THEIR", "THEY", "THEYRE", "YOUR", "YOU" , "A", "AN", "IS", "ISNT", "WILL",
-                   "WONT", "DID", "DIDNT", "HAVE", "HAD", "WHEN", "WHERE", "HOW", "WHAT", "wHY", 
-                   "HAVENT", "NOT", "SHOULD", "WOULD", "COULD", "BE", "BEING", "GET", "HADNT", "WE",
-                   "THIS", "THERE", "IN", "MY", "TO", "AS", "I", "-", "ING", "IN", "FROM", "AT", "HE", "SHE",
-                   "AND", "ON", "IT", "FOR", "OF", "WITH")
-  
-  df_c <- df_u[!(df_u$word %in% plain_words),]
-  
+
+ ################################################################ 
+######################### ANH-MINH'S WORK #######################
+  ###############################################################
   decipher <- reactive({
     if(input$choice == "positive" | input$choice == "negative") {
       df_main <- df_bing %>% 
@@ -226,6 +239,15 @@ shinyServer(function(input, output) {
                   and we assume not to be important enought to consider."))
     }
   })
+  
+  output$trend_link <- renderPrint({
+    HTML(paste0("<a href = https://www.youtube.com/feed/trending> Here </a>is a link to YouTube's Trending page."))
+  })
+  
+  ############################################################################
+  ################################# THOMAS' WORK #############################
+  ############################################################################
+  
   output$category_plot <- renderPlot({
     ggplot(data = sum()) +
       geom_point(mapping = aes(x = category_id, y = freq), na.rm = T) +
