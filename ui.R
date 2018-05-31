@@ -97,7 +97,16 @@ shinyUI(fluidPage(
                                                 England = "GB"))
                    ),
                    mainPanel(
-                     plotOutput("category_plot", click = "my_plot_click")
+                     tabsetPanel(type = "tabs",
+                                 tabPanel(
+                                          "Graph",
+                                          plotOutput("category_plot", click = "my_plot_click"),
+                                          textOutput("category_desc")
+                                          ),
+                                 tabPanel("Explanation",
+                                          tableOutput("category_sym")
+                                 )
+                                          )
                    )
                  )  
         )

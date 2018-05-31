@@ -87,16 +87,6 @@ shinyServer(function(input, output) {
     
   })
   
-  category_data <- reactive({
-    read.csv(paste0("data/", input$region, "videos.csv"))
-  })
-  
-  sum <- reactive({
-    category_data() %>% group_by(category_id) %>% summarise(n = n()) %>%
-      mutate(freq = round((n / sum(n)) * 100, digits = 2))
-  })
-  
-  
   output$time_plot <- renderPlotly({
     p <- ggplot(data = time_data()) +
       geom_bar(aes(x = hour_publish), fill = "red") +
@@ -226,11 +216,54 @@ shinyServer(function(input, output) {
                   and we assume not to be important enought to consider."))
     }
   })
+  
+  output$category_sym <- renderTable({
+    category_sym <- read.csv("data/category_sym.csv", stringsAsFactors = F)
+  })
+  #could probably stand to be split lengthwise a little
+  #but i don't really know how to do that
+  
+  category_data <- reactive({
+    read.csv(paste0("data/", input$region, "videos.csv"))
+  })
+  
+  sum <- reactive({
+    category_data() %>% group_by(category_id) %>% summarise(n = n()) %>%
+      mutate(freq = round((n / sum(n)) * 100, digits = 2))
+  })
+  #sum()[1] <- reactive({
+  #  as.integer(unlist(sum()[1]))
+  #})
+  #colnames(sum()) <- reactive({
+  #  c("id", "n", "freq")
+  #})
+  #joined_df <- reactive({
+  #  left_join(category_sym, sum, by = id)
+  #})
+  #joined_df <- reactive({
+  # joined_df %>% filter(!is.na(n))
+  #})
+  #done outside of reactive environments this works just fine so idk
+  
+  #output$category_plot <- renderPlotly({
   output$category_plot <- renderPlot({
-    ggplot(data = sum()) +
+    p <- ggplot(data = sum()) +
       geom_point(mapping = aes(x = category_id, y = freq), na.rm = T) +
       labs(title = paste(input$region, "data"),
            x = "Category",
-           y = "Percentage")
+           y = "Percentage") +
+      scale_x_discrete(name = "Category"#,
+                       #labels = id
+                       )
+    #p <- ggplotly(p, tooltip = "y")
+    p
+  })
+  
+  output$category_desc <- renderPrint({
+    HTML(paste0("This chart shows what percentage of trending videos each category makes up. Each point represents
+     the sum of one category measured against the counts of all other videos.
+     Notably, you can see that while all other regions have category 24 (Entertainment) as their
+     most common trending video, England uniquely has category 10 (Music) as its most common trending
+     vdieo."))
   })
 })
